@@ -1,26 +1,88 @@
 {
-	"geode": "4.4.0",
+	"geode": "5.7.1",
 	"gd": {
-		"win": "2.2074",
-		"android": "2.2074"
+		"win": "2.2081",
+		"android": "2.2081"
 	},
 	"version": "2.4.1",
-	"id": "zilko.xdbot",
-	"name": "xdBot",
-	"developer": "Zilko",
-	"description": "Best Free Bot fr",
-	"dependencies": [
-		{
-			"id": "geode.custom-keybinds",
-			"version": ">=v1.10.0",
-			"importance": "required",
+	"id": "mizo.zobot",
+	"name": "ZoBot",
+	"developer": "Mizo",
+	"description": "A Geode macro, replay, and gameplay utility toolkit for Geometry Dash.",
+	"dependencies": {
+		"geode.custom-keybinds": {
+			"version": ">=v2.1.0",
+			"required": true,
 			"platforms": ["win"]
 		}
-	],
+	},
 	"settings": {
 		"button-setting": {
 			"type": "custom:button",
 			"name": "Open Menu"
+		},
+		"open_menu": {
+			"type": "keybind",
+			"name": "Open Menu",
+			"description": "Open Menu.",
+			"default": "Alt+F",
+			"category": "universal"
+		},
+		"toggle_recording": {
+			"type": "keybind",
+			"name": "Record Macro",
+			"description": "Toggles recording.",
+			"default": "Alt+G",
+			"category": "gameplay"
+		},
+		"toggle_playing": {
+			"type": "keybind",
+			"name": "Play Macro",
+			"description": "Toggles playing.",
+			"default": "Alt+H",
+			"category": "gameplay"
+		},
+		"toggle_speedhack": {
+			"type": "keybind",
+			"name": "Speedhack",
+			"description": "Toggles speedhack.",
+			"default": "Alt+S",
+			"category": "gameplay"
+		},
+		"toggle_frame_stepper": {
+			"type": "keybind",
+			"name": "Toggle Frame Stepper",
+			"description": "Toggles frame stepper.",
+			"default": "Alt+C",
+			"category": "gameplay"
+		},
+		"step_frame": {
+			"type": "keybind",
+			"name": "Advance Frame",
+			"description": "Advances one frame if frame stepper is on.",
+			"default": "V",
+			"category": "gameplay"
+		},
+		"toggle_render": {
+			"type": "keybind",
+			"name": "Render",
+			"description": "Toggles rendering.",
+			"default": "Alt+P",
+			"category": "gameplay"
+		},
+		"toggle_noclip": {
+			"type": "keybind",
+			"name": "NoClip",
+			"description": "Toggles NoClip.",
+			"default": "Alt+N",
+			"category": "gameplay"
+		},
+		"show_trajectory": {
+			"type": "keybind",
+			"name": "Show Trajectory",
+			"description": "Toggles Show Trajectory.",
+			"default": "Alt+T",
+			"category": "gameplay"
 		},
 		"macro_accuracy": {
 			"type": "string",
@@ -92,7 +154,7 @@
 		},
 		"level_settings_button": {
 			"name": "Show Button At Settings",
-			"description": "Shows the xdBot button in the level settings layer.",
+			"description": "Shows the ZoBot button in the level settings layer.",
 			"type": "bool",
 			"default": false
 		},
@@ -142,7 +204,7 @@
             "resources/default_release_right.mp3"
         ]
     },
-	"links": { "source": "https://github.com/ZiLko/xdBot", "community": "https://discord.gg/w6yvdzVzBd" },
+	"links": { "source": "https://github.com/ZiLko/xdBot", "community": "https://discord.gg/HcBzRepK4R" },
 	"tags": ["gameplay", "utility", "cheat"]
 
 }

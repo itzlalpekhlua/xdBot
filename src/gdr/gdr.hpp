@@ -14,7 +14,13 @@ cocos2d::CCPoint dataFromString(std::string dataString);
 
 std::vector<std::string> splitByChar(std::string str, char splitChar);
 
-const std::string xdBotVersion = "v2.3.11";
+const std::string botName = "ZoBot";
+const std::string legacyBotName = "xdBot";
+const std::string botVersion = "v2.4.1";
+
+inline bool isCompatibleBotName(std::string const& name) {
+	return name == botName || name == legacyBotName;
+}
 
 namespace gdr {
 
@@ -159,10 +165,10 @@ namespace gdr {
 				replay.framerate = replayJson["framerate"];
 
 			bool rotation = ver.find("beta.") == std::string::npos && ver.find("alpha.") == std::string::npos;
-			if (replay.botInfo.name == "xdBot" && ver == "v2.0.0") rotation = true;
+			if (isCompatibleBotName(replay.botInfo.name) && ver == "v2.0.0") rotation = true;
 
 			// bool offset = false;
-			int offset = replay.botInfo.name == "xdBot" ? 1 : 0;
+			int offset = isCompatibleBotName(replay.botInfo.name) ? 1 : 0;
 
 			if (offset == 1) {
 				if (ver.front() == 'v') ver = ver.substr(1);
@@ -227,7 +233,7 @@ namespace gdr {
 					frameFix.p2.rotate = false;
 
 				} else if (frameFixJson.contains("p1")) {
-					if (replay.botInfo.name != "xdBot") rotation = false;
+					if (!isCompatibleBotName(replay.botInfo.name)) rotation = false;
 
 					if (frameFixJson["p1"].contains("x"))
 						frameFix.p1.pos.x = frameFixJson["p1"]["x"];

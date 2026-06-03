@@ -1,6 +1,6 @@
 #include "../includes.hpp"
 
-class AutoSaveLayer : public geode::Popup<>, public TextInputDelegate {
+class AutoSaveLayer : public geode::Popup, public TextInputDelegate {
 
 private:
 
@@ -13,7 +13,7 @@ private:
 
 	STATIC_CREATE(AutoSaveLayer, 250, 190)
 
-	void textChanged(CCTextInputNode*) override {
+	void textChanged(CCTextInputNode*) {
 		std::string str = intervalInput->getString();
 		float mins = geode::utils::numFromString<float>(str).unwrapOr(0.f);
 
@@ -21,7 +21,7 @@ private:
 		Mod::get()->setSavedValue("autosave_interval", str);
 	}
 	
-    bool setup() override {
+    bool setup() {
         setTitle("AutoSave");
 		m_title->setScale(0.575f);
 		m_title->setPositionY(171);
@@ -128,7 +128,6 @@ private:
 		intervalLbl2->setOpacity(g.autosaveIntervalEnabled ? 255 : 100);
 		intervalInput->getBGSprite()->setOpacity(g.autosaveIntervalEnabled ? 90 : 30);
 		intervalInput->setEnabled(g.autosaveIntervalEnabled);
-		intervalInput->getInputNode()->m_placeholderLabel->setOpacity(g.autosaveIntervalEnabled ? 255 : 100);
 		if (!g.autosaveIntervalEnabled) {
 			intervalInput->getInputNode()->detachWithIME();
 			intervalInput->getInputNode()->onClickTrackNode(false);

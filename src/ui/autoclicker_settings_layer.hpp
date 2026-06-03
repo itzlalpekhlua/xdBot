@@ -1,6 +1,6 @@
 #include "../includes.hpp"
 
-class AutoclickerLayer : public geode::Popup<>, public TextInputDelegate {
+class AutoclickerLayer : public geode::Popup, public TextInputDelegate {
 
 private:
 
@@ -25,7 +25,7 @@ private:
 
 	STATIC_CREATE(AutoclickerLayer, 250, 240)
 
-	void textChanged(CCTextInputNode*) override {
+	void textChanged(CCTextInputNode*) {
 		auto& g = Global::get();
 		g.holdFor = geode::utils::numFromString<int>(holdInput->getString()).unwrapOr(0);
 		g.releaseFor = geode::utils::numFromString<int>(releaseInput->getString()).unwrapOr(0);
@@ -45,7 +45,7 @@ private:
 		releaseLbl2->setString(fmt::format("{:.3f}s", dt * g.releaseFor2).c_str());
 	}
 	
-    bool setup() override {
+    bool setup() {
         setTitle("Autoclicker");
 		m_title->setScale(0.625f);
 		m_title->setPositionY(224);
@@ -192,7 +192,6 @@ private:
 		holdLbl->setOpacity(g.autoclickerP1 ? 86 : 23);
 		holdInput->getBGSprite()->setOpacity(g.autoclickerP1 ? 90 : 30);
 		holdInput->setEnabled(g.autoclickerP1);
-		holdInput->getInputNode()->m_placeholderLabel->setOpacity(g.autoclickerP1 ? 255 : 100);
 		if (!g.autoclickerP1) {
 			holdInput->getInputNode()->detachWithIME();
 			holdInput->getInputNode()->onClickTrackNode(false);
@@ -203,7 +202,6 @@ private:
 		holdLbl2->setOpacity(g.autoclickerP2 ? 86 : 23);
 		holdInput2->getBGSprite()->setOpacity(g.autoclickerP2 ? 90 : 30);
 		holdInput2->setEnabled(g.autoclickerP2);
-		holdInput2->getInputNode()->m_placeholderLabel->setOpacity(g.autoclickerP2 ? 255 : 100);
 		if (!g.autoclickerP2) {
 			holdInput2->getInputNode()->detachWithIME();
 			holdInput2->getInputNode()->onClickTrackNode(false);
@@ -214,7 +212,6 @@ private:
 		releaseLbl->setOpacity(g.autoclickerP1 ? 86 : 23);
 		releaseInput->getBGSprite()->setOpacity(g.autoclickerP1 ? 90 : 30);
 		releaseInput->setEnabled(g.autoclickerP1);
-		releaseInput->getInputNode()->m_placeholderLabel->setOpacity(g.autoclickerP1 ? 255 : 100);
 		if (!g.autoclickerP1) {
 			releaseInput->getInputNode()->detachWithIME();
 			releaseInput->getInputNode()->onClickTrackNode(false);
@@ -225,7 +222,6 @@ private:
 		releaseLbl2->setOpacity(g.autoclickerP2 ? 86 : 23);
 		releaseInput2->getBGSprite()->setOpacity(g.autoclickerP2 ? 90 : 30);
 		releaseInput2->setEnabled(g.autoclickerP2);
-		releaseInput2->getInputNode()->m_placeholderLabel->setOpacity(g.autoclickerP2 ? 255 : 100);
 		if (!g.autoclickerP2) {
 			releaseInput2->getInputNode()->detachWithIME();
 			releaseInput2->getInputNode()->onClickTrackNode(false);

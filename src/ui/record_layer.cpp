@@ -99,7 +99,7 @@ class $modify(PauseLayer) {
 };
 
 $execute{
-    geode::listenForSettingChanges("frame_offset", +[](int64_t value) {
+    geode::listenForSettingChanges<int64_t>("frame_offset", +[](int64_t value) {
         auto& g = Global::get();
         g.frameOffset = value;
 
@@ -111,7 +111,7 @@ $execute{
 
   });
 
-    geode::listenForSettingChanges("background_color", +[](cocos2d::ccColor3B value) {
+    geode::listenForSettingChanges<cocos2d::ccColor3B>("background_color", +[](cocos2d::ccColor3B value) {
         auto& g = Global::get();
         if (g.layer) {
             CCArray* children = CCDirector::sharedDirector()->getRunningScene()->getChildren();
@@ -129,7 +129,7 @@ void RecordLayer::openSaveMacro(CCObject*) {
 }
 
 void RecordLayer::openLoadMacro(CCObject*) {
-    LoadMacroLayer::open(static_cast<geode::Popup<>*>(this), nullptr);
+    LoadMacroLayer::open(static_cast<geode::Popup*>(this), nullptr);
 }
 
 RecordLayer* RecordLayer::openMenu(bool instant) {
@@ -159,7 +159,7 @@ RecordLayer* RecordLayer::openMenu(bool instant) {
     layer->m_noElasticity = instant || Global::get().speedhackEnabled;
     layer->show();
 
-    g.layer = static_cast<geode::Popup<>*>(layer);
+    g.layer = static_cast<geode::Popup*>(layer);
 
     return layer;
 }
@@ -241,7 +241,7 @@ void RecordLayer::togglePlaying(CCObject*) {
         g.currentAction = 0;
         g.currentFrameFix = 0;
 
-        g.macro.xdBotMacro = g.macro.botInfo.name == "xdBot";
+        g.macro.xdBotMacro = isCompatibleBotName(g.macro.botInfo.name);
         
         PlayLayer* pl = PlayLayer::get();
 
@@ -465,7 +465,7 @@ void RecordLayer::toggleSetting(CCObject* obj) {
         }
 
         if (!value)
-            Notification::create("xdBot Button is disabled.", NotificationIcon::Warning)->show();
+            Notification::create("ZoBot Button is disabled.", NotificationIcon::Warning)->show();
     }
 }
 
@@ -473,7 +473,7 @@ void RecordLayer::showKeybindsWarning() {
     if (!mod->setSavedValue("opened_keybinds", true))
         FLAlertLayer::create(
             "Warning",
-            "Scroll down to find xdBot's keybinds",
+            "Scroll down to find ZoBot's keybinds",
             "Ok"
         )->show();
 }
@@ -496,7 +496,9 @@ void RecordLayer::openKeybinds(CCObject*) {
     CCNode* contentLayer = scrollLayer->getChildByID("content-layer");
     if (!contentLayer) return showKeybindsWarning();
 
-    CCNode* xdBot = contentLayer->getChildByID("xdBot");
+    CCNode* xdBot = contentLayer->getChildByID("ZoBot");
+    if (!xdBot)
+        xdBot = contentLayer->getChildByID("xdBot");
     if (!xdBot) return showKeybindsWarning();
 
     contentLayer->setPositionY(xdBot->getPositionY() - 118);
@@ -516,7 +518,7 @@ void RecordLayer::onAutosaves(CCObject*) {
     std::filesystem::path path = Mod::get()->getSettingValue<std::filesystem::path>("autosaves_folder");
 
     if (std::filesystem::exists(path))
-        LoadMacroLayer::open(static_cast<geode::Popup<>*>(this), nullptr, true);
+        LoadMacroLayer::open(static_cast<geode::Popup*>(this), nullptr, true);
     else {
         FLAlertLayer::create("Error", "There was an error getting the folder. ID: 5", "Ok")->show();
     }
@@ -588,7 +590,7 @@ bool RecordLayer::setup() {
     CCSprite* spriteOn = CCSprite::createWithSpriteFrameName("GJ_checkOn_001.png");
     CCSprite* spriteOff = CCSprite::createWithSpriteFrameName("GJ_checkOff_001.png");
 
-    CCLabelBMFont* versionLabel = CCLabelBMFont::create(("xdBot " + xdBotVersion).c_str(), "chatFont.fnt");
+    CCLabelBMFont* versionLabel = CCLabelBMFont::create((botName + " " + botVersion).c_str(), "chatFont.fnt");
     versionLabel->setOpacity(63);
     versionLabel->setPosition(ccp(-217, -125));
     versionLabel->setAnchorPoint({ 0, 0.5 });
@@ -765,7 +767,6 @@ bool RecordLayer::setup() {
     widthInput = CCTextInputNode::create(150, 30, "Width", "chatFont.fnt");
     widthInput->m_textField->setAnchorPoint({ 0.5f, 0.5f });
     widthInput->ignoreAnchorPointForPosition(true);
-    widthInput->m_placeholderLabel->setAnchorPoint({ 0.5f, 0.5f });
     widthInput->setPosition(ccp(-157, -31));
     widthInput->setMaxLabelScale(0.7f);
     widthInput->setMouseEnabled(true);
@@ -780,7 +781,6 @@ bool RecordLayer::setup() {
     heightInput = CCTextInputNode::create(150, 30, "Height", "chatFont.fnt");
     heightInput->m_textField->setAnchorPoint({ 0.5f, 0.5f });
     heightInput->ignoreAnchorPointForPosition(true);
-    heightInput->m_placeholderLabel->setAnchorPoint({ 0.5f, 0.5f });
     heightInput->setPosition(ccp(-72.5, -31));
     heightInput->setMaxLabelScale(0.7f);
     heightInput->setMouseEnabled(true);
@@ -795,7 +795,6 @@ bool RecordLayer::setup() {
     bitrateInput = CCTextInputNode::create(150, 30, "br", "chatFont.fnt");
     bitrateInput->m_textField->setAnchorPoint({ 0.5f, 0.5f });
     bitrateInput->ignoreAnchorPointForPosition(true);
-    bitrateInput->m_placeholderLabel->setAnchorPoint({ 0.5f, 0.5f });
     bitrateInput->setPosition(ccp(-185.5, -59));
     bitrateInput->setMaxLabelScale(0.7f);
     bitrateInput->setMouseEnabled(true);
@@ -838,7 +837,6 @@ bool RecordLayer::setup() {
     codecInput = CCTextInputNode::create(150, 30, "Codec", "chatFont.fnt");
     codecInput->m_textField->setAnchorPoint({ 0.5f, 0.5f });
     codecInput->ignoreAnchorPointForPosition(true);
-    codecInput->m_placeholderLabel->setAnchorPoint({ 0.5f, 0.5f });
     codecInput->setPosition(ccp(-70.5, -62));
     codecInput->setMouseEnabled(true);
     codecInput->setTouchEnabled(true);
@@ -853,8 +851,7 @@ bool RecordLayer::setup() {
     fpsInput = CCTextInputNode::create(150, 30, "FPS", "chatFont.fnt");
     fpsInput->m_textField->setAnchorPoint({ 0.5f, 0.5f });
     fpsInput->ignoreAnchorPointForPosition(true);
-    fpsInput->m_placeholderLabel->setAnchorPoint({ 0.5f, 0.5f });
-    fpsInput->m_placeholderLabel->setScale(0.6);
+    fpsInput->setLabelPlaceholderScale(0.6);
     fpsInput->setPosition(ccp(-133, -59));
     fpsInput->setMaxLabelScale(0.7f);
     fpsInput->setMouseEnabled(true);
@@ -1076,8 +1073,7 @@ void RecordLayer::loadSetting(RecordSetting sett, float yPos) {
         speedhackInput->setPosition(ccp(127.5, yPos));
         speedhackInput->m_textField->setAnchorPoint({ 0.5f, 0.5f });
         speedhackInput->ignoreAnchorPointForPosition(true);
-        speedhackInput->m_placeholderLabel->setAnchorPoint({ 0.5f, 0.5f });
-        speedhackInput->m_placeholderLabel->setScale(0.6);
+        speedhackInput->setLabelPlaceholderScale(0.6);
         speedhackInput->setMaxLabelScale(0.7f);
         speedhackInput->setMouseEnabled(true);
         speedhackInput->setTouchEnabled(true);
@@ -1108,8 +1104,7 @@ void RecordLayer::loadSetting(RecordSetting sett, float yPos) {
         tpsInput->setPosition(ccp(133.5, yPos));
         tpsInput->m_textField->setAnchorPoint({ 0.5f, 0.5f });
         tpsInput->ignoreAnchorPointForPosition(true);
-        tpsInput->m_placeholderLabel->setAnchorPoint({ 0.5f, 0.5f });
-        tpsInput->m_placeholderLabel->setScale(0.6);
+        tpsInput->setLabelPlaceholderScale(0.6);
         tpsInput->setMaxLabelScale(0.7f);
         tpsInput->setMouseEnabled(true);
         tpsInput->setTouchEnabled(true);
@@ -1140,8 +1135,7 @@ void RecordLayer::loadSetting(RecordSetting sett, float yPos) {
         seedInput->setPosition(ccp(109.5, yPos));
         seedInput->m_textField->setAnchorPoint({ 0.5f, 0.5f });
         seedInput->ignoreAnchorPointForPosition(true);
-        seedInput->m_placeholderLabel->setAnchorPoint({ 0.5f, 0.5f });
-        seedInput->m_placeholderLabel->setScale(0.6);
+        seedInput->setLabelPlaceholderScale(0.6);
         seedInput->setMaxLabelScale(0.7f);
         seedInput->setMouseEnabled(true);
         seedInput->setTouchEnabled(true);
@@ -1172,8 +1166,7 @@ void RecordLayer::loadSetting(RecordSetting sett, float yPos) {
         respawnInput->setPosition(ccp(127.5, yPos));
         respawnInput->m_textField->setAnchorPoint({ 0.5f, 0.5f });
         respawnInput->ignoreAnchorPointForPosition(true);
-        respawnInput->m_placeholderLabel->setAnchorPoint({ 0.5f, 0.5f });
-        respawnInput->m_placeholderLabel->setScale(0.6);
+        respawnInput->setLabelPlaceholderScale(0.6);
         respawnInput->setMaxLabelScale(0.7f);
         respawnInput->setMouseEnabled(true);
         respawnInput->setTouchEnabled(true);
@@ -1222,11 +1215,11 @@ void RecordLayer::goToSettingsPage(int page) {
 void RecordLayer::onDiscord(CCObject*) {
     geode::createQuickPopup(
         "Discord",
-        "Join the <cb>Discord</c> server?\n(<cl>discord.gg/w6yvdzVzBd</c>).",
+        "Join the <cb>Discord</c> server?\n(<cl>discord.gg/HcBzRepK4R</c>).",
         "No", "Yes",
         [](auto, bool btn2) {
         	if (btn2)
-				geode::utils::web::openLinkInBrowser("https://discord.gg/w6yvdzVzBd");
+				geode::utils::web::openLinkInBrowser("https://discord.gg/HcBzRepK4R");
         }
     );
 }
@@ -1249,7 +1242,6 @@ void RecordLayer::updateTPS() {
         tpsInput->setID("");
         tpsBg->setOpacity(75);
         tpsToggle->setEnabled(true);
-        tpsInput->m_placeholderLabel->setOpacity(255);
 
         tpsInput->detachWithIME();
         tpsInput->onClickTrackNode(false);
@@ -1265,7 +1257,6 @@ void RecordLayer::updateTPS() {
         tpsInput->setID("disabled-input"_spr);
         tpsBg->setOpacity(30);
         tpsToggle->setEnabled(false);
-        tpsInput->m_placeholderLabel->setOpacity(120);
 
         tpsInput->detachWithIME();
         tpsInput->onClickTrackNode(false);

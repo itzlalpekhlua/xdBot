@@ -18,19 +18,19 @@ public:
         return root.ok(std::static_pointer_cast<SettingV3>(res));
     }
 
-    bool load(matjson::Value const& json) override {
+    bool load(matjson::Value const& json) {
         return true;
     }
-    bool save(matjson::Value& json) const override {
+    bool save(matjson::Value& json) const {
         return true;
     }
 
-    bool isDefaultValue() const override {
+    bool isDefaultValue() const {
         return true;
     }
-    void reset() override {}
+    void reset() {}
 
-    SettingNodeV3* createNode(float width) override;
+    SettingNodeV3* createNode(float width);
 };
 
 class MyButtonSettingNodeV3 : public SettingNodeV3 {
@@ -53,7 +53,7 @@ protected:
         return true;
     }
     
-    void updateState(CCNode* invoker) override {
+    void updateState(CCNode* invoker) {
         SettingNodeV3::updateState(invoker);
     }
 
@@ -65,8 +65,8 @@ protected:
         RecordLayer::openMenu();
     }
 
-    void onCommit() override {}
-    void onResetToDefault() override {}
+    void onCommit() {}
+    void onResetToDefault() {}
 
 public:
     static MyButtonSettingNodeV3* create(std::shared_ptr<MyButtonSettingV3> setting, float width) {
@@ -78,10 +78,10 @@ public:
         CC_SAFE_DELETE(ret);
         return nullptr;
     }
-    bool hasUncommittedChanges() const override {
+    bool hasUncommittedChanges() const {
         return false;
     }
-    bool hasNonDefaultValue() const override {
+    bool hasNonDefaultValue() const {
         return false;
     }
     std::shared_ptr<MyButtonSettingV3> getSetting() const {

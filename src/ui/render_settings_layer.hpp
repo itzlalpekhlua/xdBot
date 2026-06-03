@@ -2,7 +2,7 @@
 
 #include "../includes.hpp"
 
-class RenderSettingsLayer : public geode::Popup<>, public TextInputDelegate {
+class RenderSettingsLayer : public geode::Popup, public TextInputDelegate {
 	
 public:
 
@@ -24,7 +24,7 @@ public:
 
 private:
 
-	bool setup() override;
+	bool setup();
 
 public:
 
@@ -38,7 +38,7 @@ public:
 		keyBackClicked();
 	}
 
-	void textChanged(CCTextInputNode* node) override;
+	void textChanged(CCTextInputNode* node);
 
 	void onSlider(CCObject*);
 

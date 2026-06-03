@@ -109,8 +109,8 @@ void Macro::updateInfo(PlayLayer* pl) {
     if (g.macro.author == "")
         g.macro.author = "N/A";
 
-    g.macro.botInfo.name = "xdBot";
-    g.macro.botInfo.version = xdBotVersion;
+    g.macro.botInfo.name = botName;
+    g.macro.botInfo.version = botVersion;
     g.macro.xdBotMacro = true;
 }
 

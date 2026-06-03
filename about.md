@@ -1,6 +1,6 @@
-# xdBot
+# ZoBot
 
-<cl>xdBot</c> is a simple botting tool designed to be easy for anyone to use; intended for <cg>showcases</c>.
+<cl>ZoBot</c> is a Geode macro, replay, and gameplay utility toolkit for Geometry Dash. It is designed for clean showcase recording, macro playback, practice tooling, and render workflows.
 
 # Features
 
