@@ -252,6 +252,8 @@ void LoadMacroLayer::onImportMacro(CCObject*) {
 
 std::string LoadMacroLayer::serverBaseUrl() {
 	std::string url = Mod::get()->getSettingValue<std::string>("macro_server_url");
+	if (url.empty() || url == "http://94.249.138.22:8787")
+		url = "https://repo.mizodevelopment.com/xdbot-api";
 	while (!url.empty() && url.back() == '/')
 		url.pop_back();
 	return url;

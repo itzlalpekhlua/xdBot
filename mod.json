@@ -124,7 +124,7 @@
 		"macro_server_url": {
 			"name": "Macro Server URL",
 			"type": "string",
-			"default": ""
+			"default": "https://repo.mizodevelopment.com/xdbot-api"
 		},
 		"macro_server_token": {
 			"name": "Macro Server Token",
