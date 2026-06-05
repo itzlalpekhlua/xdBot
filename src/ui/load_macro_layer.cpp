@@ -367,6 +367,7 @@ void LoadMacroLayer::requestRemoteMacros() {
 						entry.id = item["id"].asString().unwrapOrDefault();
 						entry.name = item["name"].asString().unwrapOrDefault();
 						entry.filename = item["filename"].asString().unwrapOrDefault();
+						entry.author = item["owner"].asString().unwrapOr(item["author"].asString().unwrapOrDefault());
 						entry.size = static_cast<std::uintmax_t>(item["size"].asInt().unwrapOr(0));
 						entry.downloads = static_cast<std::uintmax_t>(item["downloads"].asInt().unwrapOr(0));
 						if (!entry.id.empty() && !entry.name.empty())
@@ -404,8 +405,10 @@ void LoadMacroLayer::uploadMacro(std::filesystem::path path) {
 	std::string url = serverBaseUrl() + "/api/macros";
 	std::string token = serverToken();
 	std::string filename = path.filename().string();
+	std::string ownerName = GJAccountManager::sharedState() != nullptr ? GJAccountManager::sharedState()->m_username : "";
+	int ownerAccountID = GJAccountManager::sharedState() != nullptr ? GJAccountManager::sharedState()->m_accountID : 0;
 
-	std::thread([url, token, filename, path] {
+	std::thread([url, token, filename, path, ownerName, ownerAccountID] {
 		std::ifstream f(path, std::ios::binary);
 		f.seekg(0, std::ios::end);
 		size_t fileSize = f.tellg();
@@ -420,6 +423,12 @@ void LoadMacroLayer::uploadMacro(std::filesystem::path path) {
 			.header("X-Filename", filename)
 			.body(std::move(data));
 
+		if (!ownerName.empty())
+			req.header("X-Owner-Name", ownerName);
+		if (!ownerName.empty())
+			req.header("X-Uploader-Name", ownerName);
+		if (ownerAccountID > 0)
+			req.header("X-Owner-Account-ID", std::to_string(ownerAccountID));
 		if (!token.empty())
 			req.header("X-Auth-Token", token);
 
@@ -456,6 +465,9 @@ bool LoadMacroLayer::loadDownloadedMacro(std::filesystem::path path) {
 
 		newMacro = Macro::importData(macroData);
 	}
+
+	if (newMacro.inputs.empty())
+		return FLAlertLayer::create("Error", "Downloaded macro is invalid or empty.", "Ok")->show(), false;
 
 	g.macro = newMacro;
 	g.currentAction = 0;
@@ -518,8 +530,8 @@ void LoadMacroLayer::downloadRemoteMacro(std::string id, std::string filename) {
 			std::ofstream f(Utils::widen(out.string()), std::ios::binary);
 			auto const& data = res.data();
 			f.write(reinterpret_cast<char const*>(data.data()), data.size());
+			ok = f.good();
 			f.close();
-			ok = true;
 		}
 
 			Loader::get()->queueInMainThread([this, ok, out] {
@@ -919,6 +931,7 @@ bool MacroCell::initRemote(RemoteMacroEntry entry, geode::Popup* menuLayer, CCLa
 	isRemote = true;
 	remoteID = entry.id;
 	remoteFilename = entry.filename;
+	remoteAuthor = entry.author;
 	remoteDownloads = entry.downloads;
 	name = entry.name;
 	path = entry.filename;
@@ -975,11 +988,11 @@ bool MacroCell::init(std::filesystem::path path, std::string name, std::time_t d
 #ifdef GEODE_IS_WINDOWS
 	std::string subText = Utils::formatTime(date) + " | ";
 
-	subText += isRemote ? fmt::format("{} downloads", remoteDownloads) : (autosave ? "Auto Save" : path.extension().string());
+	subText += isRemote ? fmt::format("{}{} downloads", remoteAuthor.empty() ? "" : fmt::format("By {} | ", remoteAuthor), remoteDownloads) : (autosave ? "Auto Save" : path.extension().string());
 
 	lbl = CCLabelBMFont::create(subText.c_str(), "chatFont.fnt");
 #else
-	std::string subText = isRemote ? fmt::format("{} downloads", remoteDownloads) : (autosave ? "Auto Save" : path.extension().string());
+	std::string subText = isRemote ? fmt::format("{}{} downloads", remoteAuthor.empty() ? "" : fmt::format("By {} | ", remoteAuthor), remoteDownloads) : (autosave ? "Auto Save" : path.extension().string());
 
 	lbl = CCLabelBMFont::create(subText.c_str(), "chatFont.fnt");
 #endif

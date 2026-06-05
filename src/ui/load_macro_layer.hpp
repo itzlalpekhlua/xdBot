@@ -11,6 +11,7 @@ struct RemoteMacroEntry {
 	std::string id;
 	std::string name;
 	std::string filename;
+	std::string author;
 	std::uintmax_t size = 0;
 	std::uintmax_t downloads = 0;
 };
@@ -21,6 +22,7 @@ class MacroCell : public CCNode {
 	std::time_t date;
 	std::string remoteID;
 	std::string remoteFilename;
+	std::string remoteAuthor;
 	std::uintmax_t remoteDownloads = 0;
 
 	geode::Popup* menuLayer = nullptr;
