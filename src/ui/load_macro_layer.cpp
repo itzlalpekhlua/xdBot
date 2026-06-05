@@ -322,6 +322,7 @@ void LoadMacroLayer::requestRemoteMacros() {
 						entry.name = item["name"].asString().unwrapOrDefault();
 						entry.filename = item["filename"].asString().unwrapOrDefault();
 						entry.size = static_cast<std::uintmax_t>(item["size"].asInt().unwrapOr(0));
+						entry.downloads = static_cast<std::uintmax_t>(item["downloads"].asInt().unwrapOr(0));
 						if (!entry.id.empty() && !entry.name.empty())
 							entries.push_back(entry);
 					}
@@ -806,6 +807,7 @@ MacroCell* MacroCell::createRemote(RemoteMacroEntry entry, geode::Popup* menuLay
 bool MacroCell::initRemote(RemoteMacroEntry entry, geode::Popup* menuLayer, CCLayer* loadLayer) {
 	isRemote = true;
 	remoteID = entry.id;
+	remoteDownloads = entry.downloads;
 	name = entry.name;
 	path = entry.filename;
 	date = 0;
@@ -861,11 +863,11 @@ bool MacroCell::init(std::filesystem::path path, std::string name, std::time_t d
 #ifdef GEODE_IS_WINDOWS
 	std::string subText = Utils::formatTime(date) + " | ";
 
-	subText += autosave ? "Auto Save" : path.extension().string();
+	subText += isRemote ? fmt::format("{} downloads", remoteDownloads) : (autosave ? "Auto Save" : path.extension().string());
 
 	lbl = CCLabelBMFont::create(subText.c_str(), "chatFont.fnt");
 #else
-	std::string subText = isRemote ? "Remote Macro" : (autosave ? "Auto Save" : path.extension().string());
+	std::string subText = isRemote ? fmt::format("{} downloads", remoteDownloads) : (autosave ? "Auto Save" : path.extension().string());
 
 	lbl = CCLabelBMFont::create(subText.c_str(), "chatFont.fnt");
 #endif

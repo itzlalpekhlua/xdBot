@@ -1,6 +1,12 @@
 # v2.4.1
 
 * Added Auto Clicker keybind.
+* Added remote macro library support.
+* Added remote macro upload from the Load Macro menu.
+* Added remote macro search and download from the Load Macro menu.
+* Added remote macro download counts.
+* Updated to Geode 5.7.1 and Geometry Dash 2.2081.
+* Added Android64 package support.
 * Fixed spider being buggy if using Input Fixes.
 * Made render extension default to .mp4 if empty.
 
