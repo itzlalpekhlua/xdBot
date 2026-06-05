@@ -6,6 +6,7 @@
 * Added remote macro search and download from the Load Macro menu.
 * Added remote macro download counts.
 * Added the default cloud macro server connection.
+* Fixed remote macro downloads for filenames with spaces.
 * Updated to Geode 5.7.1 and Geometry Dash 2.2081.
 * Added Android64 package support.
 * Fixed spider being buggy if using Input Fixes.

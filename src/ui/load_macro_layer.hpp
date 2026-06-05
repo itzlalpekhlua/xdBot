@@ -20,6 +20,7 @@ class MacroCell : public CCNode {
 	std::filesystem::path path;
 	std::time_t date;
 	std::string remoteID;
+	std::string remoteFilename;
 	std::uintmax_t remoteDownloads = 0;
 
 	geode::Popup* menuLayer = nullptr;
@@ -112,7 +113,7 @@ public:
 	void onUploadSelected(CCObject*);
 	void requestRemoteMacros();
 	void uploadMacro(std::filesystem::path path);
-	void downloadRemoteMacro(std::string id, std::string name);
+	void downloadRemoteMacro(std::string id, std::string filename);
 	bool ensureServerConfigured();
 	std::string serverBaseUrl();
 	std::string serverToken();

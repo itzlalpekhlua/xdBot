@@ -31,6 +31,50 @@ namespace {
 
 		return out;
 	}
+
+	std::filesystem::path uniqueRemoteMacroPath(std::filesystem::path folder, std::string filename) {
+		filename = cleanMacroName(filename);
+		std::filesystem::path clean = filename;
+		if (clean.extension().empty())
+			clean += ".gdr.json";
+
+		std::filesystem::path stem = clean.stem();
+		std::filesystem::path ext = clean.extension();
+		std::filesystem::path out = folder / clean;
+
+		int i = 1;
+		while (std::filesystem::exists(out)) {
+			out = folder / stem;
+			out += fmt::format(" ({})", i++);
+			out += ext;
+		}
+
+		return out;
+	}
+
+	std::string encodePathSegment(std::string const& value) {
+		constexpr char hex[] = "0123456789ABCDEF";
+		std::string encoded;
+		encoded.reserve(value.size());
+
+		for (unsigned char ch : value) {
+			if (
+				(ch >= 'A' && ch <= 'Z') ||
+				(ch >= 'a' && ch <= 'z') ||
+				(ch >= '0' && ch <= '9') ||
+				ch == '-' || ch == '_' || ch == '.' || ch == '~'
+			) {
+				encoded += static_cast<char>(ch);
+			}
+			else {
+				encoded += '%';
+				encoded += hex[ch >> 4];
+				encoded += hex[ch & 0x0F];
+			}
+		}
+
+		return encoded;
+	}
 }
 
 class $modify(CCMenu) {
@@ -387,13 +431,13 @@ void LoadMacroLayer::uploadMacro(std::filesystem::path path) {
 	}).detach();
 }
 
-void LoadMacroLayer::downloadRemoteMacro(std::string id, std::string name) {
+void LoadMacroLayer::downloadRemoteMacro(std::string id, std::string filename) {
 	if (!ensureServerConfigured()) return;
 
-	std::string url = serverBaseUrl() + "/api/macros/" + id;
+	std::string url = serverBaseUrl() + "/api/macros/" + encodePathSegment(id);
 	std::string token = serverToken();
 	std::filesystem::path macrosPath = Mod::get()->getSettingValue<std::filesystem::path>("macros_folder");
-	std::filesystem::path out = uniqueMacroPath(macrosPath, name);
+	std::filesystem::path out = uniqueRemoteMacroPath(macrosPath, filename);
 
 	retain();
 	std::thread([this, url, token, out] {
@@ -809,6 +853,7 @@ MacroCell* MacroCell::createRemote(RemoteMacroEntry entry, geode::Popup* menuLay
 bool MacroCell::initRemote(RemoteMacroEntry entry, geode::Popup* menuLayer, CCLayer* loadLayer) {
 	isRemote = true;
 	remoteID = entry.id;
+	remoteFilename = entry.filename;
 	remoteDownloads = entry.downloads;
 	name = entry.name;
 	path = entry.filename;
@@ -916,7 +961,7 @@ bool MacroCell::init(std::filesystem::path path, std::string name, std::time_t d
 
 void MacroCell::handleLoad() {
 	if (isRemote)
-		return static_cast<LoadMacroLayer*>(loadLayer)->downloadRemoteMacro(remoteID, name);
+		return static_cast<LoadMacroLayer*>(loadLayer)->downloadRemoteMacro(remoteID, remoteFilename);
 
 	auto& g = Global::get();
 	
