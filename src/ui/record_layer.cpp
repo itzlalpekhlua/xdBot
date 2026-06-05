@@ -51,7 +51,6 @@ const std::vector<std::vector<RecordSetting>> settings {
 		{ "Ignore inputs:", "macro_ignore_inputs", InputType::None },
 		{ "Show Frame Label:", "macro_show_frame_label", InputType::None },
 		{ "Speedhack Audio:", "macro_speedhack_audio", InputType::None }
-		// { "Auto Stop Playing:", "macro_auto_stop_playing", InputType::None }
 	},
     {
 		{ "Respawn Time:", "respawn_time_enabled", InputType::Respawn },
@@ -271,7 +270,7 @@ void RecordLayer::onEditMacro(CCObject*) {
     MacroEditLayer::open();
 }
 
-void RecordLayer::toggleFPS(bool on) { // forgotten
+void RecordLayer::toggleFPS(bool on) {
     return;
     float scaleSpr = -0.8, scaleBtn = -1;
     int opacityBtn = 57, opacityLbl = 80;
@@ -385,7 +384,6 @@ void RecordLayer::toggleSetting(CCObject* obj) {
 
     g.mod->setSavedValue(id, value);
 
-    // Some of these get checked every frame so idk i didnt want to do mod->getSavedValue<bool> every time
     if (id == "macro_seed_enabled") g.seedEnabled = value;
     if (id == "macro_speedhack_enabled") g.speedhackEnabled = value;
     if (id == "macro_speedhack_audio") g.speedhackAudio = value;
@@ -1003,7 +1001,6 @@ void RecordLayer::loadSetting(RecordSetting sett, float yPos) {
     float toggleScale = 0.555f;
 
     if (sett.disabled) {
-        // Code when disabled xD!
     }
 
     CCMenuItemToggler* toggle = CCMenuItemToggler::create(spriteOff, spriteOn, this, menu_selector(RecordLayer::toggleSetting));

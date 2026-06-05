@@ -209,10 +209,6 @@ void ShowTrajectory::handlePortal(PlayerObject* player, int id) {
         player->togglePlayerScale(false, true);
         player->updatePlayerScale();
         break;
-        // case 11:
-            // player->flipGravity(true, true); break;
-        // case 10:
-            // player->flipGravity(false, true); break;
     case 200: player->m_playerSpeed = 0.7f; break;
     case 201: player->m_playerSpeed = 0.9f; break;
     case 202: player->m_playerSpeed = 1.1f; break;
@@ -386,10 +382,6 @@ class $modify(GJBaseGameLayer) {
             GJBaseGameLayer::activateSongEditTrigger(p0);
 
     }
-    // void activateSongTrigger(SongTriggerGameObject * p0) {
-    //     if (!t.creatingTrajectory)
-    //         GJBaseGameLayer::activateSongTrigger(p0);
-    // }
 
     void gameEventTriggered(GJGameEvent p0, int p1, int p2) {
         if (!t.creatingTrajectory)

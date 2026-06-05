@@ -16,8 +16,6 @@ PlayerData PlayerPracticeFixes::saveData(PlayerObject* player) {
 
     #else
 
-    // data.m_jumpPadRelated = player->m_jumpPadRelated;
-    // data.m_holdingButtons = player->m_holdingButtons;
 
     #endif
 
@@ -271,8 +269,6 @@ void PlayerPracticeFixes::applyData(PlayerObject* player, PlayerData data, bool 
 
     #else
 
-    // player->m_jumpPadRelated = data.m_jumpPadRelated;
-    // player->m_holdingButtons = data.m_holdingButtons;
 
     #endif
 

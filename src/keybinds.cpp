@@ -36,19 +36,6 @@ class $modify(CCKeyboardDispatcher) {
       }
     }
 
-    // if (key == enumKeyCodes::KEY_L && !isKeyRepeat && isKeyDown) {
-    // }
-
-    // if (key == enumKeyCodes::KEY_F && !isKeyRepeat && isKeyDown && PlayLayer::get()) {
-    //   log::debug("POS DEBUG {}", PlayLayer::get()->m_player1->getPosition());
-    //   log::debug("POS2 DEBUG {}", PlayLayer::get()->m_player2->getPosition());
-    // }
-
-
-    // if (key == enumKeyCodes::KEY_J && !isKeyRepeat && isKeyDown && PlayLayer::get()) {
-    //   std::string str = ZipUtils::decompressString(PlayLayer::get()->m_level->m_levelString.c_str(), true, 0);
-    //   log::debug("{}", str);
-    // }
 
     return CCKeyboardDispatcher::dispatchKeyboardMSG(key, isKeyDown, isKeyRepeat, timestamp);
   }

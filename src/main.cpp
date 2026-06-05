@@ -202,8 +202,6 @@ class $modify(BGLHook, GJBaseGameLayer) {
     PlayLayer* pl = PlayLayer::get();
 
     if (!pl) {
-      // handlePlaying(Global::getCurrentFrame(true));
-      // log::debug("{}", Global::getCurrentFrame(true));
       return GJBaseGameLayer::processCommands(dt, isHalfTick, isLastTick);
     }
 
@@ -267,13 +265,11 @@ class $modify(BGLHook, GJBaseGameLayer) {
 
     if (g.delayedFrameInput[0] == frame) {
       g.delayedFrameInput[0] = -1;
-      // if ((g.heldButtons[0] && twoPlayers) || (!twoPlayers && (g.heldButtons[0] || g.heldButtons[3])))
         GJBaseGameLayer::handleButton(true, 1, true);
     }
 
     if (g.delayedFrameInput[1] == frame) {
       g.delayedFrameInput[1] = -1;
-      // if ((g.heldButtons[3] && twoPlayers) || (!twoPlayers && (g.heldButtons[0] || g.heldButtons[3])))
         GJBaseGameLayer::handleButton(true, 1, false);
     }
 

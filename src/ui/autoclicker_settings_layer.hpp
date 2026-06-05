@@ -95,7 +95,6 @@ private:
 		releaseInput->getInputNode()->setMaxLabelLength(4);
 		m_mainLayer->addChild(releaseInput);
 
-		// ------------------------
 
 		lbl = CCLabelBMFont::create("Player 2", "goldFont.fnt");
 		lbl->setPosition({m_size.width / 2, 115});

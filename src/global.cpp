@@ -31,7 +31,6 @@ const std::vector<IncompatibleMod> incompatibleMods {
   { "syzzi.click_between_frames", true, { {"soft-toggle", false, true }, { "actual-delta", true } } },
   { "alphalaneous.click_after_frames", true, { { "soft-toggle", false, true } } },
   { "thesillydoggo.qolmod", true, { { "tps-bypass_enabled", true, false, true } } },
-  // { "zmx.cbf-lite", false, {  } }
 };
 
 bool Global::hasIncompatibleMods() {
@@ -154,18 +153,15 @@ float Global::getTPS() {
 }
 
 int Global::getCurrentFrame(bool editor) {
-  // double levelTime;
   PlayLayer* pl = PlayLayer::get();
 
   if (!pl) {
     if (!editor) return 0;
 
-    // levelTime = GJBaseGameLayer::get()->m_gameState.m_levelTime;
   }
 
   auto& g = Global::get();
   int frame;
-  // levelTime = pl->m_gameState.m_levelTime;
 
   if (!g.macro.xdBotMacro && g.state == state::playing) {
     frame = pl->m_gameState.m_currentProgress;

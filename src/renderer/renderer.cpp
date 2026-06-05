@@ -342,7 +342,6 @@ void Renderer::start() {
             auto res = ffmpeg.init(settings);
             if (res.isErr()) {
                 Loader::get()->queueInMainThread([] {
-                    // std::string err = res.unwrapErr();
                     FLAlertLayer::create("Error", "FFmpeg API failed to initialize: ", "Ok")->show();
                 });
 
@@ -480,7 +479,7 @@ void Renderer::start() {
                     ffmpegPath, tempPathAudio
                 );
 
-                process = subprocess::Popen(command);  // Fix ffmpeg not reading it
+                process = subprocess::Popen(command);
                 if (process.close()) {
                     Loader::get()->queueInMainThread([] {
                         FLAlertLayer::create("Error", "There was an error adding the song. ID: 140", "Ok")->show();

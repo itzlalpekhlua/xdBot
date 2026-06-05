@@ -38,7 +38,6 @@ class $modify(FLAlertLayer) {
 
         std::string selected = "";
 
-        // Latest has priority
         for (size_t i = 0; i < layer->spriteButtons.size(); i++) {
             cocos2d::CCPoint location = touch->getLocation();
             cocos2d::CCPoint btnPos = layer->spriteButtons[i]->getPosition();

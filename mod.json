@@ -121,6 +121,16 @@
 			"type": "folder",
 			"default": "{gd_dir}/autosaves"
 		},
+		"macro_server_url": {
+			"name": "Macro Server URL",
+			"type": "string",
+			"default": ""
+		},
+		"macro_server_token": {
+			"name": "Macro Server Token",
+			"type": "string",
+			"default": ""
+		},
 		"render_folder": {
 			"name": "Render Save Location",
 			"type": "folder",

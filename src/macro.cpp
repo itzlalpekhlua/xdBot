@@ -78,7 +78,7 @@ void Macro::tryAutosave(GJGameLevel* level, CheckpointObject* cp) {
     std::string levelname = level->m_levelName;
     std::filesystem::path path = autoSavesPath / fmt::format("autosave_{}_{}", levelname, g.currentSession);
     std::error_code ec;
-    std::filesystem::remove(path.string() + ".gdr", ec); // Remove previous save
+    std::filesystem::remove(path.string() + ".gdr", ec);
     if (ec) log::warn("Failed to remove previous autosave");
 
     autoSave(level, g.currentSession);
@@ -341,20 +341,6 @@ bool Macro::shouldStep() {
     if (g.stepFrame) return true;
     if (Global::getCurrentFrame() == 0) return true;
 
-    // if (g.ignoreFrame != -1) return true;
-    // if (g.ignoreJumpButton != -1) return true;
-
-    // if (g.delayedFrameReleaseMain[0] != -1) return true;
-    // if (g.delayedFrameReleaseMain[1] != -1) return true;
-
-    // if (g.delayedFrameInput[0] != -1) return true;
-    // if (g.delayedFrameInput[1] != -1) return true;
-
-    // for (int x = 0; x < 2; x++) {
-    //     for (int y = 0; y < 2; y++) {
-    //         if (g.delayedFrameRelease[x][y] != -1) return true;
-    //     }
-    // }
 
     return false;
 }

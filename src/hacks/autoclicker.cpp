@@ -23,7 +23,7 @@ class $modify(GJBaseGameLayer) {
         const int holdFor[2] = {g.holdFor, g.holdFor2};
         const int releaseFor[2] = {g.releaseFor, g.releaseFor2};
 
-        for (int i = 0; i < 2; i++) { // check 2 player mode
+        for (int i = 0; i < 2; i++) {
             bool isPlayer1 = (i == 0);
             if ((!g.autoclickerP1 && isPlayer1) || (!g.autoclickerP2 && !isPlayer1)) continue;
 

@@ -3,6 +3,35 @@
 #include "macro_editor.hpp"
 
 #include <Geode/modify/CCMenu.hpp>
+#include <Geode/utils/web.hpp>
+#include <thread>
+
+namespace {
+	std::string cleanMacroName(std::string name) {
+		for (char& ch : name) {
+			if (ch == '/' || ch == '\\' || ch == ':' || ch == '*' || ch == '?' || ch == '"' || ch == '<' || ch == '>' || ch == '|')
+				ch = '_';
+		}
+		if (name.empty())
+			name = "macro";
+		return name;
+	}
+
+	std::filesystem::path uniqueMacroPath(std::filesystem::path folder, std::string name) {
+		std::filesystem::path base = folder / cleanMacroName(name);
+		std::filesystem::path out = base;
+		out += ".gdr.json";
+
+		int i = 1;
+		while (std::filesystem::exists(out)) {
+			out = base;
+			out += fmt::format(" ({})", i++);
+			out += ".gdr.json";
+		}
+
+		return out;
+	}
+}
 
 class $modify(CCMenu) {
 	virtual bool ccTouchBegan(cocos2d::CCTouch* touch, cocos2d::CCEvent* event) {
@@ -53,6 +82,11 @@ void LoadMacroLayer::textChanged(CCTextInputNode* node) {
 	}
 	else
 		searchOff->setVisible(false);
+
+	if (remoteMode) {
+		requestRemoteMacros();
+		return;
+	}
 
 	reloadList(0);
 }
@@ -115,6 +149,8 @@ void LoadMacroLayer::deleteSelected(CCObject*) {
 }
 
 void LoadMacroLayer::onSelectAll(CCObject* obj) {
+	if (remoteMode) return;
+
 	bool on = !static_cast<CCMenuItemToggler*>(obj)->isToggled();
 
 	for (size_t i = 0; i < allMacros.size(); i++) {
@@ -214,6 +250,176 @@ void LoadMacroLayer::onImportMacro(CCObject*) {
 		});
 }
 
+std::string LoadMacroLayer::serverBaseUrl() {
+	std::string url = Mod::get()->getSettingValue<std::string>("macro_server_url");
+	while (!url.empty() && url.back() == '/')
+		url.pop_back();
+	return url;
+}
+
+std::string LoadMacroLayer::serverToken() {
+	return Mod::get()->getSettingValue<std::string>("macro_server_token");
+}
+
+bool LoadMacroLayer::ensureServerConfigured() {
+	if (serverBaseUrl().empty())
+		return FLAlertLayer::create("Error", "Macro server is not configured.", "Ok")->show(), false;
+	return true;
+}
+
+void LoadMacroLayer::onRemoteMacros(CCObject*) {
+	if (remoteMode) {
+		remoteMode = false;
+		remoteMacros.clear();
+		reloadList(0);
+		return;
+	}
+
+	if (!ensureServerConfigured()) return;
+
+	remoteMode = true;
+	requestRemoteMacros();
+}
+
+void LoadMacroLayer::requestRemoteMacros() {
+	if (!ensureServerConfigured()) return;
+
+	remoteLoading = true;
+	remoteMacros.clear();
+	reloadList(0);
+
+	std::string url = serverBaseUrl() + "/api/macros";
+	std::string token = serverToken();
+	std::string query = search;
+
+	retain();
+	std::thread([this, url, token, query] {
+		std::vector<RemoteMacroEntry> entries;
+		std::string error;
+
+		auto req = geode::utils::web::WebRequest().timeout(std::chrono::seconds(20));
+		if (!token.empty())
+			req.header("X-Auth-Token", token);
+		if (!query.empty())
+			req.param("q", query);
+
+		auto res = req.getSync(url);
+		if (!res.ok()) {
+			error = fmt::format("Server error {}.", res.code());
+		}
+		else {
+			auto jsonRes = res.json();
+			if (jsonRes.isErr()) {
+				error = "Invalid server response.";
+			}
+			else {
+				auto root = jsonRes.unwrap();
+				auto arr = root["macros"].asArray();
+				if (arr.isOk()) {
+					for (auto const& item : arr.unwrap()) {
+						RemoteMacroEntry entry;
+						entry.id = item["id"].asString().unwrapOrDefault();
+						entry.name = item["name"].asString().unwrapOrDefault();
+						entry.filename = item["filename"].asString().unwrapOrDefault();
+						entry.size = static_cast<std::uintmax_t>(item["size"].asInt().unwrapOr(0));
+						if (!entry.id.empty() && !entry.name.empty())
+							entries.push_back(entry);
+					}
+				}
+			}
+		}
+
+			Loader::get()->queueInMainThread([this, entries = std::move(entries), error] {
+				remoteLoading = false;
+				if (!error.empty())
+					Notification::create(error, NotificationIcon::Error)->show();
+				remoteMacros = entries;
+				if (remoteMode)
+					reloadList(0);
+				release();
+			});
+		}).detach();
+}
+
+void LoadMacroLayer::onUploadSelected(CCObject*) {
+	if (!ensureServerConfigured()) return;
+
+	if (selectedMacros.empty())
+		return FLAlertLayer::create("Error", "Select a local macro first.", "Ok")->show();
+
+	for (MacroCell* cell : selectedMacros)
+		uploadMacro(cell->getPath());
+}
+
+void LoadMacroLayer::uploadMacro(std::filesystem::path path) {
+	if (!std::filesystem::exists(path)) return;
+
+	std::string url = serverBaseUrl() + "/api/macros";
+	std::string token = serverToken();
+	std::string filename = path.filename().string();
+
+	std::thread([url, token, filename, path] {
+		std::ifstream f(path, std::ios::binary);
+		f.seekg(0, std::ios::end);
+		size_t fileSize = f.tellg();
+		f.seekg(0, std::ios::beg);
+
+		geode::ByteVector data(fileSize);
+		f.read(reinterpret_cast<char*>(data.data()), fileSize);
+		f.close();
+
+		auto req = geode::utils::web::WebRequest()
+			.timeout(std::chrono::seconds(30))
+			.header("X-Filename", filename)
+			.body(std::move(data));
+
+		if (!token.empty())
+			req.header("X-Auth-Token", token);
+
+		auto res = req.postSync(url);
+
+		Loader::get()->queueInMainThread([ok = res.ok()] {
+			Notification::create(ok ? "Macro Uploaded" : "Upload Failed", ok ? NotificationIcon::Success : NotificationIcon::Error)->show();
+		});
+	}).detach();
+}
+
+void LoadMacroLayer::downloadRemoteMacro(std::string id, std::string name) {
+	if (!ensureServerConfigured()) return;
+
+	std::string url = serverBaseUrl() + "/api/macros/" + id;
+	std::string token = serverToken();
+	std::filesystem::path macrosPath = Mod::get()->getSettingValue<std::filesystem::path>("macros_folder");
+	std::filesystem::path out = uniqueMacroPath(macrosPath, name);
+
+	retain();
+	std::thread([this, url, token, out] {
+		auto req = geode::utils::web::WebRequest().timeout(std::chrono::seconds(30));
+		if (!token.empty())
+			req.header("X-Auth-Token", token);
+
+		auto res = req.getSync(url);
+		bool ok = false;
+
+		if (res.ok()) {
+			std::ofstream f(Utils::widen(out.string()), std::ios::binary);
+			auto const& data = res.data();
+			f.write(reinterpret_cast<char const*>(data.data()), data.size());
+			f.close();
+			ok = true;
+		}
+
+			Loader::get()->queueInMainThread([this, ok] {
+				Notification::create(ok ? "Macro Downloaded" : "Download Failed", ok ? NotificationIcon::Success : NotificationIcon::Error)->show();
+				if (ok) {
+					remoteMode = false;
+					reloadList(0);
+				}
+				release();
+			});
+		}).detach();
+}
+
 bool LoadMacroLayer::setup(geode::Popup* layer, geode::Popup* layer2, bool autosaves) {
 
 	#ifdef GEODE_IS_ANDROID
@@ -294,6 +500,27 @@ bool LoadMacroLayer::setup(geode::Popup* layer, geode::Popup* layer2, bool autos
 			);
 			btn->setPosition(ccp(15, -121));
 
+			menu->addChild(btn);
+		}
+		else {
+			ButtonSprite* uploadSpr = ButtonSprite::create("Upload");
+			uploadSpr->setScale(0.42f);
+			btn = CCMenuItemSpriteExtra::create(
+				uploadSpr,
+				this,
+				menu_selector(LoadMacroLayer::onUploadSelected)
+			);
+			btn->setPosition(ccp(-35, -121));
+			menu->addChild(btn);
+
+			ButtonSprite* cloudSpr = ButtonSprite::create("Cloud");
+			cloudSpr->setScale(0.42f);
+			btn = CCMenuItemSpriteExtra::create(
+				cloudSpr,
+				this,
+				menu_selector(LoadMacroLayer::onRemoteMacros)
+			);
+			btn->setPosition(ccp(15, -121));
 			menu->addChild(btn);
 		}
 	}
@@ -418,7 +645,13 @@ void LoadMacroLayer::addList(bool refresh, float prevScroll) {
 
 	CCArray* cells = CCArray::create();
 
-	for (int i = invertSort ? macros.size() - 1 : 0; invertSort ? i >= 0 : i < macros.size(); invertSort ? --i : ++i) {
+	if (remoteMode) {
+		for (auto const& entry : remoteMacros) {
+			MacroCell* cell = MacroCell::createRemote(entry, menuLayer, static_cast<CCLayer*>(this));
+			cells->addObject(cell);
+		}
+	}
+	else for (int i = invertSort ? macros.size() - 1 : 0; invertSort ? i >= 0 : i < macros.size(); invertSort ? --i : ++i) {
 
 		if (macros[i].extension() != ".gdr" && macros[i].extension() != ".xd" && macros[i].extension() != ".json") continue;
 
@@ -439,10 +672,13 @@ void LoadMacroLayer::addList(bool refresh, float prevScroll) {
 		cells->addObject(cell);
 	}
 
-	macroCountLbl->setString(fmt::format("{} Macros", std::to_string(cells->count())).c_str());
+	if (remoteLoading)
+		macroCountLbl->setString("Loading");
+	else
+		macroCountLbl->setString(fmt::format("{} Macros", std::to_string(cells->count())).c_str());
 
 	if (cells->count() == 0) {
-		CCLabelBMFont* lbl = CCLabelBMFont::create(isAutosaves ? "No Autosaves" : "No Macros", "bigFont.fnt");
+		CCLabelBMFont* lbl = CCLabelBMFont::create(remoteLoading ? "Loading" : (isAutosaves ? "No Autosaves" : "No Macros"), "bigFont.fnt");
 		lbl->setPosition(winSize / 2);
 		lbl->setScale(0.5f);
 		lbl->setOpacity(100);
@@ -556,6 +792,31 @@ MacroCell* MacroCell::create(std::filesystem::path path, std::string name, std::
 	return ret;
 }
 
+MacroCell* MacroCell::createRemote(RemoteMacroEntry entry, geode::Popup* menuLayer, CCLayer* loadLayer) {
+	MacroCell* ret = new MacroCell();
+	if (!ret->initRemote(entry, menuLayer, loadLayer)) {
+		delete ret;
+		return nullptr;
+	}
+
+	ret->autorelease();
+	return ret;
+}
+
+bool MacroCell::initRemote(RemoteMacroEntry entry, geode::Popup* menuLayer, CCLayer* loadLayer) {
+	isRemote = true;
+	remoteID = entry.id;
+	name = entry.name;
+	path = entry.filename;
+	date = 0;
+	this->menuLayer = menuLayer;
+	this->loadLayer = loadLayer;
+	this->mergeLayer = nullptr;
+	this->isMerge = false;
+
+	return init(path, name, date, menuLayer, nullptr, loadLayer);
+}
+
 bool MacroCell::init(std::filesystem::path path, std::string name, std::time_t date, geode::Popup* menuLayer, geode::Popup* mergeLayer, CCLayer* loadLayer) {
 
 	this->path = path;
@@ -604,7 +865,7 @@ bool MacroCell::init(std::filesystem::path path, std::string name, std::time_t d
 
 	lbl = CCLabelBMFont::create(subText.c_str(), "chatFont.fnt");
 #else
-	std::string subText = autosave ? "Auto Save" : path.extension().string();
+	std::string subText = isRemote ? "Remote Macro" : (autosave ? "Auto Save" : path.extension().string());
 
 	lbl = CCLabelBMFont::create(subText.c_str(), "chatFont.fnt");
 #endif
@@ -633,7 +894,7 @@ bool MacroCell::init(std::filesystem::path path, std::string name, std::time_t d
 	);
 	btn->setPosition(ccp(246, 17.5f));
 
-	if (!isMerge)
+	if (!isMerge && !isRemote)
 		menu->addChild(btn);
 
 	CCSprite* spriteOn = CCSprite::createWithSpriteFrameName("GJ_checkOn_001.png");
@@ -643,13 +904,16 @@ bool MacroCell::init(std::filesystem::path path, std::string name, std::time_t d
 	toggler->setScale(0.485f);
 	toggler->setPosition({ 220, 17.5 });
 
-	if (!isMerge)
+	if (!isMerge && !isRemote)
 		menu->addChild(toggler);
 
 	return true;
 }
 
 void MacroCell::handleLoad() {
+	if (isRemote)
+		return static_cast<LoadMacroLayer*>(loadLayer)->downloadRemoteMacro(remoteID, name);
+
 	auto& g = Global::get();
 	
 	Macro newMacro;
@@ -759,6 +1023,8 @@ void MacroCell::onLoad(CCObject*) {
 }
 
 void MacroCell::onDelete(CCObject*) {
+	if (isRemote) return;
+
 	geode::createQuickPopup(
 		"Warning",
 		"Are you sure you want to <cr>delete</c> this macro? (\"<cl>" + name + "</c>\")",
@@ -791,6 +1057,8 @@ void MacroCell::onSelect(CCObject*) {
 }
 
 void MacroCell::selectMacro(bool single) {
+	if (isRemote) return;
+
 	LoadMacroLayer* layer = static_cast<LoadMacroLayer*>(loadLayer);
 	std::vector<MacroCell*>& selectedMacros = layer->selectedMacros;
 
@@ -805,4 +1073,8 @@ void MacroCell::selectMacro(bool single) {
 
 	if (selectedMacros.size() == layer->allMacros.size() && single)
 		layer->selectAllToggle->toggle(true);
+}
+
+std::filesystem::path MacroCell::getPath() const {
+	return path;
 }
