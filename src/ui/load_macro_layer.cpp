@@ -431,6 +431,72 @@ void LoadMacroLayer::uploadMacro(std::filesystem::path path) {
 	}).detach();
 }
 
+bool LoadMacroLayer::loadDownloadedMacro(std::filesystem::path path) {
+	auto& g = Global::get();
+	Macro newMacro;
+
+	if (path.extension() == ".xd") {
+		if (!Macro::loadXDFile(path))
+			return FLAlertLayer::create("Error", "There was an error loading this macro. ID: 45", "Ok")->show(), false;
+
+		newMacro = g.macro;
+	}
+	else {
+		std::ifstream f(path.string(), std::ios::binary);
+		if (!f.is_open())
+			return FLAlertLayer::create("Error", "There was an error loading this macro. ID: 47", "Ok")->show(), false;
+
+		f.seekg(0, std::ios::end);
+		size_t fileSize = f.tellg();
+		f.seekg(0, std::ios::beg);
+
+		std::vector<std::uint8_t> macroData(fileSize);
+		f.read(reinterpret_cast<char*>(macroData.data()), fileSize);
+		f.close();
+
+		newMacro = Macro::importData(macroData);
+	}
+
+	g.macro = newMacro;
+	g.currentAction = 0;
+	g.currentFrameFix = 0;
+	g.restart = true;
+	g.macro.canChangeFPS = false;
+	g.macro.xdBotMacro = isCompatibleBotName(g.macro.botInfo.name);
+
+	keyBackClicked();
+
+	RecordLayer* newLayer = nullptr;
+
+	if (RecordLayer* layer = typeinfo_cast<RecordLayer*>(menuLayer)) {
+		layer->onClose(nullptr);
+		newLayer = RecordLayer::openMenu(true);
+	}
+
+	if (!newLayer) newLayer = g.layer != nullptr ? static_cast<RecordLayer*>(g.layer) : nullptr;
+	if (newLayer) newLayer->updateTPS();
+
+	if (!PlayLayer::get() && g.state != state::playing)
+		Macro::togglePlaying();
+	else if (g.state == state::recording) {
+		if (newLayer) {
+			newLayer->recording->toggle(Global::get().state != state::recording);
+			newLayer->toggleRecording(nullptr);
+		}
+		else {
+			RecordLayer* layer = RecordLayer::create();
+			layer->toggleRecording(nullptr);
+			layer->onClose(nullptr);
+		}
+	}
+
+	if (path.extension() == ".xd")
+		FLAlertLayer::create("Warning", "<cl>.xd</c> extension macros may not function correctly in this version.", "Ok")->show();
+
+	Notification::create("Macro Loaded", NotificationIcon::Success)->show();
+	return true;
+}
+
 void LoadMacroLayer::downloadRemoteMacro(std::string id, std::string filename) {
 	if (!ensureServerConfigured()) return;
 
@@ -456,12 +522,11 @@ void LoadMacroLayer::downloadRemoteMacro(std::string id, std::string filename) {
 			ok = true;
 		}
 
-			Loader::get()->queueInMainThread([this, ok] {
-				Notification::create(ok ? "Macro Downloaded" : "Download Failed", ok ? NotificationIcon::Success : NotificationIcon::Error)->show();
-				if (ok) {
-					remoteMode = false;
-					reloadList(0);
-				}
+			Loader::get()->queueInMainThread([this, ok, out] {
+				if (ok)
+					loadDownloadedMacro(out);
+				else
+					Notification::create("Download Failed", NotificationIcon::Error)->show();
 				release();
 			});
 		}).detach();

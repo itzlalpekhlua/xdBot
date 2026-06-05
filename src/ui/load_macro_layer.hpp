@@ -114,6 +114,7 @@ public:
 	void requestRemoteMacros();
 	void uploadMacro(std::filesystem::path path);
 	void downloadRemoteMacro(std::string id, std::string filename);
+	bool loadDownloadedMacro(std::filesystem::path path);
 	bool ensureServerConfigured();
 	std::string serverBaseUrl();
 	std::string serverToken();
