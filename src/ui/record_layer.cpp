@@ -465,7 +465,7 @@ void RecordLayer::toggleSetting(CCObject* obj) {
         }
 
         if (!value)
-            Notification::create("ZoBot Button is disabled.", NotificationIcon::Warning)->show();
+            Notification::create("xdBot Button is disabled.", NotificationIcon::Warning)->show();
     }
 }
 
@@ -473,7 +473,7 @@ void RecordLayer::showKeybindsWarning() {
     if (!mod->setSavedValue("opened_keybinds", true))
         FLAlertLayer::create(
             "Warning",
-            "Scroll down to find ZoBot's keybinds",
+            "Scroll down to find xdBot's keybinds",
             "Ok"
         )->show();
 }
@@ -496,9 +496,7 @@ void RecordLayer::openKeybinds(CCObject*) {
     CCNode* contentLayer = scrollLayer->getChildByID("content-layer");
     if (!contentLayer) return showKeybindsWarning();
 
-    CCNode* xdBot = contentLayer->getChildByID("ZoBot");
-    if (!xdBot)
-        xdBot = contentLayer->getChildByID("xdBot");
+    CCNode* xdBot = contentLayer->getChildByID("xdBot");
     if (!xdBot) return showKeybindsWarning();
 
     contentLayer->setPositionY(xdBot->getPositionY() - 118);
@@ -1215,11 +1213,11 @@ void RecordLayer::goToSettingsPage(int page) {
 void RecordLayer::onDiscord(CCObject*) {
     geode::createQuickPopup(
         "Discord",
-        "Join the <cb>Discord</c> server?\n(<cl>discord.gg/HcBzRepK4R</c>).",
+        "Join the <cb>Discord</c> server?\n(<cl>discord.gg/w6yvdzVzBd</c>).",
         "No", "Yes",
         [](auto, bool btn2) {
         	if (btn2)
-				geode::utils::web::openLinkInBrowser("https://discord.gg/HcBzRepK4R");
+				geode::utils::web::openLinkInBrowser("https://discord.gg/w6yvdzVzBd");
         }
     );
 }

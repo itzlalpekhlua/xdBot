@@ -5,10 +5,10 @@
 		"android": "2.2081"
 	},
 	"version": "2.4.1",
-	"id": "mizo.zobot",
-	"name": "ZoBot",
-	"developer": "Mizo",
-	"description": "A Geode macro, replay, and gameplay utility toolkit for Geometry Dash.",
+	"id": "zilko.xdbot",
+	"name": "xdBot",
+	"developer": "Zilko",
+	"description": "Best Free Bot fr",
 	"dependencies": {
 		"geode.custom-keybinds": {
 			"version": ">=v2.1.0",
@@ -154,7 +154,7 @@
 		},
 		"level_settings_button": {
 			"name": "Show Button At Settings",
-			"description": "Shows the ZoBot button in the level settings layer.",
+			"description": "Shows the xdBot button in the level settings layer.",
 			"type": "bool",
 			"default": false
 		},
@@ -204,7 +204,7 @@
             "resources/default_release_right.mp3"
         ]
     },
-	"links": { "source": "https://github.com/ZiLko/xdBot", "community": "https://discord.gg/HcBzRepK4R" },
+	"links": { "source": "https://github.com/ZiLko/xdBot", "community": "https://discord.gg/w6yvdzVzBd" },
 	"tags": ["gameplay", "utility", "cheat"]
 
 }

@@ -14,7 +14,7 @@ cocos2d::CCPoint dataFromString(std::string dataString);
 
 std::vector<std::string> splitByChar(std::string str, char splitChar);
 
-const std::string botName = "ZoBot";
+const std::string botName = "xdBot";
 const std::string legacyBotName = "xdBot";
 const std::string botVersion = "v2.4.1";
 
